@@ -662,9 +662,9 @@ void CalendarService::fetchCalDav(const CalendarConfig::Account& account) {
         accountDone(account.id, false, {});
         return;
       }
+      // keyPassword.value zeroes itself when it goes out of scope.
       const auto keyPasswordBytes = keyPassword.value.bytes();
       material->keyPassword.assign(reinterpret_cast<const char*>(keyPasswordBytes.data()), keyPasswordBytes.size());
-      sodium_memzero(const_cast<std::uint8_t*>(keyPasswordBytes.data()), keyPasswordBytes.size());
     }
     tls = std::move(material);
   }

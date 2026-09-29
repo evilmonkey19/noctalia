@@ -16,6 +16,7 @@
 #include <stdexcept>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 
 namespace noctalia::config::schema {
 
@@ -618,25 +619,23 @@ namespace noctalia::config::schema {
           field(&CalendarConfig::Account::enabled, "enabled"),
           finalize<CalendarConfig::Account>([](CalendarConfig::Account& out, std::string_view parentPath,
                                                Diagnostics& diag) {
-            if (out.type == "vdir") {
+            // The credential and mTLS fields only mean something for caldav; every other type rejects them.
+            const auto rejectCaldavOnlyFields = [&out, parentPath, &diag]() {
               if (out.credentialSource != CalendarCredentialSource::SecretService) {
                 diag.error(joinPath(parentPath, "credential_source"), "credential_source is only valid for caldav");
               }
-              if (!out.passwordFile.empty()) {
-                diag.error(joinPath(parentPath, "password_file"), "password_file is only valid for caldav");
+              for (const auto& [value, key] :
+                   {std::pair{&out.passwordFile, "password_file"},
+                    std::pair{&out.clientCertFile, "client_cert_file"},
+                    std::pair{&out.clientKeyFile, "client_key_file"},
+                    std::pair{&out.keyPasswordFile, "key_password_file"}}) {
+                if (!value->empty()) {
+                  diag.error(joinPath(parentPath, key), std::string(key) + " is only valid for caldav");
+                }
               }
-              if (!out.clientCertFile.empty()) {
-                diag.error(joinPath(parentPath, "client_cert_file"), "client_cert_file is only valid for caldav");
-              }
-              if (!out.clientCertFile.empty()) {
-                diag.error(joinPath(parentPath, "client_cert_file"), "client_cert_file is only valid for caldav");
-              }
-              if (!out.clientKeyFile.empty()) {
-                diag.error(joinPath(parentPath, "client_key_file"), "client_key_file is only valid for caldav");
-              }
-              if (!out.keyPasswordFile.empty()) {
-                diag.error(joinPath(parentPath, "key_password_file"), "key_password_file is only valid for caldav");
-              }
+            };
+            if (out.type == "vdir") {
+              rejectCaldavOnlyFields();
               if (!out.username.empty()) {
                 diag.error(joinPath(parentPath, "username"), "username is only valid for caldav");
               }
@@ -652,21 +651,7 @@ namespace noctalia::config::schema {
               if (out.serverUrl.empty()) {
                 diag.error(joinPath(parentPath, "server_url"), "ics accounts require server_url (.ics file URL)");
               }
-              if (out.credentialSource != CalendarCredentialSource::SecretService) {
-                diag.error(joinPath(parentPath, "credential_source"), "credential_source is only valid for caldav");
-              }
-              if (!out.passwordFile.empty()) {
-                diag.error(joinPath(parentPath, "password_file"), "password_file is only valid for caldav");
-              }
-              if (!out.clientCertFile.empty()) {
-                diag.error(joinPath(parentPath, "client_cert_file"), "client_cert_file is only valid for caldav");
-              }
-              if (!out.clientKeyFile.empty()) {
-                diag.error(joinPath(parentPath, "client_key_file"), "client_key_file is only valid for caldav");
-              }
-              if (!out.keyPasswordFile.empty()) {
-                diag.error(joinPath(parentPath, "key_password_file"), "key_password_file is only valid for caldav");
-              }
+              rejectCaldavOnlyFields();
               if (!out.username.empty()) {
                 diag.error(joinPath(parentPath, "username"), "username is only valid for caldav");
               }
@@ -676,21 +661,7 @@ namespace noctalia::config::schema {
               return;
             }
             if (out.type != "caldav") {
-              if (out.credentialSource != CalendarCredentialSource::SecretService) {
-                diag.error(joinPath(parentPath, "credential_source"), "credential_source is only valid for caldav");
-              }
-              if (!out.passwordFile.empty()) {
-                diag.error(joinPath(parentPath, "password_file"), "password_file is only valid for caldav");
-              }
-              if (!out.clientCertFile.empty()) {
-                diag.error(joinPath(parentPath, "client_cert_file"), "client_cert_file is only valid for caldav");
-              }
-              if (!out.clientKeyFile.empty()) {
-                diag.error(joinPath(parentPath, "client_key_file"), "client_key_file is only valid for caldav");
-              }
-              if (!out.keyPasswordFile.empty()) {
-                diag.error(joinPath(parentPath, "key_password_file"), "key_password_file is only valid for caldav");
-              }
+              rejectCaldavOnlyFields();
               return;
             }
             if (out.credentialSource == CalendarCredentialSource::File) {

@@ -922,6 +922,27 @@ client_key_file = "/etc/pki/client.key"
     if (!icsAccount.hasErrors()) {
       fail("calendar: client cert fields were accepted for a non-caldav account");
     }
+
+    const Diagnostics vdirAccount = parse(R"(
+[account.mtls]
+type = "vdir"
+path = "/home/user/.calendars"
+client_cert_file = "/etc/pki/client.pem"
+client_key_file = "/etc/pki/client.key"
+key_password_file = "/run/agenix/noctalia-key-pass"
+)");
+    if (!vdirAccount.hasErrors()) {
+      fail("calendar: client cert fields were accepted for a vdir account");
+    }
+    std::size_t vdirCertErrors = 0;
+    for (const auto& entry : vdirAccount.entries) {
+      if (entry.path == "calendar.account.mtls.client_cert_file") {
+        ++vdirCertErrors;
+      }
+    }
+    if (vdirCertErrors != 1) {
+      fail("calendar: vdir client_cert_file rejection was not reported exactly once");
+    }
   }
 
   void checkPanelFloatingLayerValidation() {

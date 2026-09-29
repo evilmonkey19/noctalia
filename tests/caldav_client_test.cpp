@@ -95,7 +95,6 @@ int main() {
   tls->clientCertPath = "/etc/pki/client.pem";
   tls->clientKeyPath = "/etc/pki/client.key";
   tls->keyPassword = "not-a-real-secret";
-  tls->caCertPath = "/etc/pki/ca.pem";
   account.tls = tls;
   const std::string mtlsBody = responsePrefix
       + "BEGIN:VEVENT\r\nUID:mtls\r\nDTSTART:20240101T000000Z\r\n"
@@ -117,7 +116,6 @@ int main() {
   ok = expect(mtlsRequest.tlsClientCert != nullptr, "mTLS account request lost its TLS material") && ok;
   ok = expect(mtlsRequest.tlsClientCert->clientCertPath == "/etc/pki/client.pem", "wrong client cert path") && ok;
   ok = expect(mtlsRequest.tlsClientCert->clientKeyPath == "/etc/pki/client.key", "wrong client key path") && ok;
-  ok = expect(mtlsRequest.tlsClientCert->caCertPath == "/etc/pki/ca.pem", "wrong CA bundle path") && ok;
   account.tls = nullptr;
 
   bool expensiveCompleted = false;

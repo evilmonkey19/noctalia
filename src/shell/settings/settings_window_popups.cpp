@@ -1572,30 +1572,23 @@ void SettingsWindow::openCalendarAccountEditor(std::optional<std::string> accoun
       if ((draft->provider == CalendarAccountProvider::CustomCalDav || ics) && draft->serverUrl.empty()) {
         draft->serverUrlInvalid = true;
       }
+      // Path fields expand ~ and $VARS when the config is read back, so validate the expanded form.
+      const auto absolutePath = [](const std::string& value) {
+        return FileUtils::expandUserPath(FileUtils::expandEnvVars(value)).is_absolute();
+      };
       if (caldav
           && draft->credentialSource == CalendarCredentialSource::File
-          && (draft->passwordFile.empty() || !std::filesystem::path(draft->passwordFile).is_absolute())) {
+          && (draft->passwordFile.empty() || !absolutePath(draft->passwordFile))) {
         draft->passwordFileInvalid = true;
       }
-      const bool hasCert = !draft->clientCertFile.empty();
-      const bool hasKey = !draft->clientKeyFile.empty();
-      if (caldav && hasKey && !hasCert) {
-        draft->clientCertInvalid = true;
-      }
-      if (caldav && hasCert && !hasKey) {
-        draft->clientKeyInvalid = true;
-      }
-      if (caldav && hasCert && !std::filesystem::path(draft->clientCertFile).is_absolute()) {
-        draft->clientCertInvalid = true;
-      }
-      if (caldav && hasKey && !std::filesystem::path(draft->clientKeyFile).is_absolute()) {
-        draft->clientKeyInvalid = true;
-      }
-      if (caldav && !draft->keyPasswordFile.empty() && !hasKey) {
-        draft->keyPasswordInvalid = true;
-      }
-      if (caldav && !draft->keyPasswordFile.empty() && !std::filesystem::path(draft->keyPasswordFile).is_absolute()) {
-        draft->keyPasswordInvalid = true;
+      if (caldav) {
+        const bool hasCert = !draft->clientCertFile.empty();
+        const bool hasKey = !draft->clientKeyFile.empty();
+        // The cert and the key are only usable as a pair, so a lone one marks the missing side invalid.
+        draft->clientCertInvalid = hasCert ? !absolutePath(draft->clientCertFile) : hasKey;
+        draft->clientKeyInvalid = hasKey ? !absolutePath(draft->clientKeyFile) : hasCert;
+        draft->keyPasswordInvalid =
+            !draft->keyPasswordFile.empty() && (!hasKey || !absolutePath(draft->keyPasswordFile));
       }
       if (vdir) {
         const std::filesystem::path checkPath =

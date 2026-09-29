@@ -159,6 +159,10 @@ Provider rules:
 - `calendars = ["id"]` syncs only discovered collection ids. Collection ids are the decoded final path segment of the
   discovered calendar URL. Leave this empty first, then narrow it manually after confirming discovery.
 
+`enabled = false` keeps an account declared but stops syncing it and drops its cached events. It works for every account
+type. Deleting an account that a config file declares writes this override, because Settings never edits config files;
+remove the override or the config entry to resume syncing.
+
 ## mTLS (client certificates)
 
 Some CalDAV servers require mutual TLS: instead of a password alone, the client must present a certificate during the
@@ -183,6 +187,8 @@ client_key_file  = "/etc/pki/noctalia/client.key"
   encrypted private keys; the file format follows the same rules as `password_file` (one trailing line break is ignored).
 - When either certificate field is set, Noctalia presents the certificate during discovery and every calendar sync.
   When neither is set, behavior is unchanged.
+- An `http://` `server_url` is requested as `https://` instead, because libcurl presents an empty certificate chain when
+  it follows a cross-scheme redirect.
 - The fields are only valid for caldav accounts; `google`, `ics`, and `vdir` accounts reject them.
 
 CA-issued certificates commonly live in an NSS database (for example `~/.pki/nssdb`, used by Firefox and

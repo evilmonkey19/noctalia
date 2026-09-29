@@ -113,9 +113,6 @@ void HttpClient::applyTlsClientCert(CURL* easy, const std::shared_ptr<const Http
   if (!cert->keyPassword.empty()) {
     curl_easy_setopt(easy, CURLOPT_SSLKEYPASSWD, cert->keyPassword.c_str());
   }
-  if (!cert->caCertPath.empty()) {
-    curl_easy_setopt(easy, CURLOPT_CAINFO, cert->caCertPath.c_str());
-  }
 }
 
 HttpClient::HttpClient() {

@@ -18,11 +18,8 @@ struct HttpTlsClientCert {
   std::string clientCertPath; // PEM certificate -> CURLOPT_SSLCERT
   std::string clientKeyPath;  // PEM private key -> CURLOPT_SSLKEY
   std::string keyPassword;    // passphrase for clientKeyPath -> CURLOPT_SSLKEYPASSWD
-  std::string caCertPath;     // extra CA bundle -> CURLOPT_CAINFO
 
-  [[nodiscard]] bool empty() const {
-    return clientCertPath.empty() && clientKeyPath.empty() && keyPassword.empty() && caCertPath.empty();
-  }
+  [[nodiscard]] bool empty() const { return clientCertPath.empty() && clientKeyPath.empty(); }
 };
 
 struct HttpRequest {
