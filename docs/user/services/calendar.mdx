@@ -200,16 +200,14 @@ server_url = "https://dav.example.com/"
 username   = "me"
 credential_source = "file"
 password_file    = "/run/agenix/noctalia-caldav"
-client_cert_file = "/etc/pki/noctalia/client.pem"
-client_key_file  = "/etc/pki/noctalia/client.key"
+client_cert_file = "~/pki/client.pem"
+client_key_file  = "~/pki/client.key"
 ```
 
-- `client_cert_file` and `client_key_file` must always be set together. Both must point at PEM-encoded files and resolve
-  to absolute paths. Setting only one is a configuration error.
-- When either certificate field is set, Noctalia presents the certificate during discovery and every calendar sync.
-  When neither is set, behavior is unchanged.
-- `server_url` must be `https://`; a plaintext hop cannot carry the certificate, and libcurl drops it when following
-  an `http://` to `https://` redirect.
+- `client_cert_file` and `client_key_file` must be set together and point at PEM-encoded files. `~` and `$VARS`
+  expand; the result must be an absolute path.
+- Noctalia presents the certificate during discovery and every calendar sync. Use an `https://` `server_url`: libcurl
+  also presents the certificate to any HTTPS host a redirect leads to.
 - The fields are only valid for caldav accounts; `google`, `ics`, and `vdir` accounts reject them.
 
 CA-issued certificates commonly live in an NSS database (for example `~/.pki/nssdb`, used by Firefox and

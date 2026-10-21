@@ -1557,7 +1557,7 @@ void SettingsWindow::openCalendarAccountEditor(std::optional<std::string> accoun
           ui::input({
               .out = &clientCertInput,
               .value = draft->clientCertFile,
-              .placeholder = "/etc/pki/noctalia/client.pem",
+              .placeholder = "/path/to/client.pem",
               .invalid = draft->clientCertInvalid,
               .onChange = [draft](const std::string& value) {
                 draft->clientCertFile = value;
@@ -1570,7 +1570,7 @@ void SettingsWindow::openCalendarAccountEditor(std::optional<std::string> accoun
           ui::input({
               .out = &clientKeyInput,
               .value = draft->clientKeyFile,
-              .placeholder = "/etc/pki/noctalia/client.key",
+              .placeholder = "/path/to/client.key",
               .invalid = draft->clientKeyInvalid,
               .onChange = [draft](const std::string& value) {
                 draft->clientKeyFile = value;
@@ -1820,7 +1820,7 @@ void SettingsWindow::openCalendarAccountEditor(std::optional<std::string> accoun
           );
           overrides.push_back({{base[0], base[1], base[2], "password_file"}, draft->passwordFile});
         }
-        // These three are plain paths, not secrets, so they stay editable after creation.
+        // Plain paths, not secrets, so they stay editable after creation.
         overrides.push_back({{base[0], base[1], base[2], "client_cert_file"}, draft->clientCertFile});
         overrides.push_back({{base[0], base[1], base[2], "client_key_file"}, draft->clientKeyFile});
       }
