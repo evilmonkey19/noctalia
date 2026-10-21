@@ -127,17 +127,12 @@ void HttpClient::applyCommonOptions(CURL* easy) const {
 }
 
 void HttpClient::applyTlsClientCert(CURL* easy, const std::shared_ptr<const HttpTlsClientCert>& cert) {
-  if (cert == nullptr || cert->empty()) {
+  if (cert == nullptr) {
     return;
   }
-  if (!cert->clientCertPath.empty()) {
-    curl_easy_setopt(easy, CURLOPT_SSLCERT, cert->clientCertPath.c_str());
-    curl_easy_setopt(easy, CURLOPT_SSLCERTTYPE, "PEM");
-  }
-  if (!cert->clientKeyPath.empty()) {
-    curl_easy_setopt(easy, CURLOPT_SSLKEY, cert->clientKeyPath.c_str());
-    curl_easy_setopt(easy, CURLOPT_SSLKEYTYPE, "PEM");
-  }
+  // curl copies both strings, so the request does not have to outlive the transfer.
+  curl_easy_setopt(easy, CURLOPT_SSLCERT, cert->clientCertPath.c_str());
+  curl_easy_setopt(easy, CURLOPT_SSLKEY, cert->clientKeyPath.c_str());
 }
 
 HttpClient::HttpClient(std::filesystem::path caBundlePath) : m_caBundlePath(std::move(caBundlePath)) {
@@ -353,7 +348,6 @@ void HttpClient::request(HttpRequest req, ResponseCallback cb) {
   transfer.body = std::move(req.body);
   transfer.basicUsername = std::move(req.basicUsername);
   transfer.basicPassword = std::move(req.basicPassword);
-  transfer.tlsClientCert = req.tlsClientCert;
   for (const auto& header : req.headers) {
     transfer.headers = curl_slist_append(transfer.headers, header.c_str());
   }
@@ -369,7 +363,7 @@ void HttpClient::request(HttpRequest req, ResponseCallback cb) {
     curl_easy_setopt(easy, CURLOPT_SSL_VERIFYPEER, 0L);
     curl_easy_setopt(easy, CURLOPT_SSL_VERIFYHOST, 0L);
   }
-  applyTlsClientCert(easy, stored.tlsClientCert);
+  applyTlsClientCert(easy, req.tlsClientCert);
   if (req.followRedirects) {
     curl_easy_setopt(easy, CURLOPT_FOLLOWLOCATION, 1L);
     if (req.allowRedirectAuth) {
@@ -443,7 +437,6 @@ HttpClient::StreamId HttpClient::startStream(HttpRequest req, StreamDataCallback
   transfer.body = std::move(req.body);
   transfer.basicUsername = std::move(req.basicUsername);
   transfer.basicPassword = std::move(req.basicPassword);
-  transfer.tlsClientCert = req.tlsClientCert;
   for (const auto& header : req.headers) {
     transfer.headers = curl_slist_append(transfer.headers, header.c_str());
   }
@@ -460,7 +453,7 @@ HttpClient::StreamId HttpClient::startStream(HttpRequest req, StreamDataCallback
     curl_easy_setopt(easy, CURLOPT_SSL_VERIFYPEER, 0L);
     curl_easy_setopt(easy, CURLOPT_SSL_VERIFYHOST, 0L);
   }
-  applyTlsClientCert(easy, stored.tlsClientCert);
+  applyTlsClientCert(easy, req.tlsClientCert);
   if (req.followRedirects) {
     curl_easy_setopt(easy, CURLOPT_FOLLOWLOCATION, 1L);
     if (req.allowRedirectAuth) {

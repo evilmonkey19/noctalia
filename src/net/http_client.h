@@ -12,13 +12,10 @@
 #include <unordered_map>
 #include <vector>
 
-// Optional mTLS material, all file paths used directly by curl. A copy must be
-// kept alive for the duration of the transfer (curl does not copy these strings).
+// mTLS client certificate and key, both PEM file paths (CURLOPT_SSLCERT / CURLOPT_SSLKEY).
 struct HttpTlsClientCert {
-  std::string clientCertPath; // PEM certificate -> CURLOPT_SSLCERT
-  std::string clientKeyPath;  // PEM private key -> CURLOPT_SSLKEY
-
-  [[nodiscard]] bool empty() const { return clientCertPath.empty() && clientKeyPath.empty(); }
+  std::string clientCertPath;
+  std::string clientKeyPath;
 };
 
 struct HttpRequest {
@@ -134,7 +131,6 @@ private:
     std::string url;
     std::string basicUsername;
     std::string basicPassword;
-    std::shared_ptr<const HttpTlsClientCert> tlsClientCert;
     std::string response;
     std::unordered_map<std::string, std::string> responseHeaders;
     std::array<char, CURL_ERROR_SIZE> errorBuffer{};
@@ -149,7 +145,6 @@ private:
     std::string body;
     std::string basicUsername;
     std::string basicPassword;
-    std::shared_ptr<const HttpTlsClientCert> tlsClientCert;
     std::array<char, CURL_ERROR_SIZE> errorBuffer{};
   };
 
@@ -169,7 +164,7 @@ private:
   // Applies the options every transfer shares, including the non-blocking abandonment of a
   // stuck DNS lookup. Call before the request-specific options.
   void applyCommonOptions(CURL* easy) const;
-  // Applies the client-certificate material of cert (no-op when it is null or empty).
+  // Applies the client certificate and key of cert; no-op when cert is null.
   static void applyTlsClientCert(CURL* easy, const std::shared_ptr<const HttpTlsClientCert>& cert);
   [[nodiscard]] bool hasActiveTransfers() const;
 
